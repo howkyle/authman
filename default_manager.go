@@ -40,10 +40,31 @@ func (d defaultDeleter) Delete(id interface{}) error {
 
 //default user manager type
 type defaultManager struct {
-	repo UserManager
-	defaultCreator
-	defaultDeleter
-	defaultRetriever
+	repo UserRepository
+}
+
+func (um defaultManager) Create(u User) (interface{}, error) {
+	id, err := um.repo.Create(u)
+	if err != nil {
+		return 0, fmt.Errorf("unable to create user: %w", err)
+	}
+	return id, nil
+}
+
+func (d defaultManager) Delete(id interface{}) error {
+	err := d.repo.Delete(id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user from db: %w", err)
+	}
+	return nil
+}
+
+func (um defaultManager) Retrieve(id interface{}) (User, error) {
+	u, err := um.repo.Retrieve(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user from db: %w", err)
+	}
+	return u, nil
 }
 
 //creates a new creator passing a repository interface
@@ -64,6 +85,7 @@ func NewRetriever(repo UserRetriever) UserRetriever {
 // func newCreatorRetriever(repo Cre)
 
 //creates a new instance of the user manager with the provided user repository
-func NewUserManager(r UserManager) UserManager {
+func NewUserManager(r UserRepository) UserManager {
+
 	return defaultManager{repo: r}
 }
