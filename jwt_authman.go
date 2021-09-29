@@ -64,12 +64,6 @@ func (a jwtAuthMan) Authenticate(u Credentials, password string) (Authentication
 	return jwtAuth{token}, nil
 }
 
-//takes identifier and password and returns user pass credential struct
-func NewUserPassCredentials(id Identifier, password string) Credentials {
-	u := userPassCredentials{principal: id.Identity(), password: password}
-	return u
-}
-
 func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//check auth in requests
@@ -148,4 +142,10 @@ func bcryptHash(password string) ([]byte, error) {
 		return nil, fmt.Errorf("unable to hash password: %v", err)
 	}
 	return hp, nil
+}
+
+//takes identifier and password and returns user pass credential struct
+func NewUserPassCredentials(id string, password string) Credentials {
+	u := userPassCredentials{principal: id, password: password}
+	return u
 }
