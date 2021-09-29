@@ -149,3 +149,7 @@ func NewUserPassCredentials(id string, password string) Credentials {
 	u := userPassCredentials{principal: id, password: password}
 	return u
 }
+
+func NewUPCredentials(id, password string) Credentials {
+	return userPassCredentials{principal: id, password: password}
+}
