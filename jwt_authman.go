@@ -65,7 +65,7 @@ func (a jwtAuthMan) Authenticate(u Credentials, password string) (Authentication
 }
 
 //takes identifier and password and returns user pass credential struct
-func (a jwtAuthMan) NewUserPassCredentials(id Identifier, password string) Credentials {
+func NewUserPassCredentials(id Identifier, password string) Credentials {
 	u := userPassCredentials{principal: id.Identity(), password: password}
 	return u
 }
