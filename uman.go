@@ -2,17 +2,17 @@ package uman
 
 type UserDeleter interface {
 	//takes and id and deletes the associated user, returns nil on success
-	Delete(id uint) error
+	Delete(id interface{}) error
 }
 
 type UserCreator interface {
-	//accepts an instance of user and returns the id of the created user
-	Create(u User) (uint, error)
+	//accepts an instance of user and returns the representation of the created user
+	Create(u User) (interface{}, error)
 }
 
 type UserRetriever interface {
 	//takes a user id and returns a User
-	Retrieve(id uint) (User, error)
+	Retrieve(id interface{}) (User, error)
 }
 
 type Emailer interface {
@@ -37,7 +37,7 @@ type UserRepository interface {
 //specifies user behaviour
 type User interface {
 	//returns the primary key id of the user
-	GetID() uint
+	GetID() interface{}
 	//returns the email address of a user
 	GetEmail() string
 }

@@ -6,7 +6,7 @@ type defaultCreator struct {
 	repo UserCreator
 }
 
-func (um defaultCreator) Create(u User) (uint, error) {
+func (um defaultCreator) Create(u User) (interface{}, error) {
 	id, err := um.repo.Create(u)
 	if err != nil {
 		return 0, fmt.Errorf("unable to create user: %w", err)
@@ -18,7 +18,7 @@ type defaultRetriever struct {
 	repo UserRetriever
 }
 
-func (um defaultRetriever) Retrieve(id uint) (User, error) {
+func (um defaultRetriever) Retrieve(id interface{}) (User, error) {
 	u, err := um.repo.Retrieve(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user from db: %w", err)
@@ -30,7 +30,7 @@ type defaultDeleter struct {
 	repo UserDeleter
 }
 
-func (d defaultDeleter) Delete(id uint) error {
+func (d defaultDeleter) Delete(id interface{}) error {
 	err := d.repo.Delete(id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user from db: %w", err)
