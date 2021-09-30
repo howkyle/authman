@@ -39,7 +39,7 @@ type User interface {
 	//returns the primary key id of the user
 	ID() interface{}
 	//returns the username of the user
-	UserName() string
+	Username() string
 	//returns the email address of a user
 	Email() string
 	//returns the hashed password of a user
