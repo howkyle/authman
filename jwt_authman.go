@@ -48,6 +48,8 @@ func (j jwtAuth) Auth() string {
 type jwtAuthMan struct {
 	secret string
 	issuer string
+	//cookie or header name where auth token is stored
+	authid string
 }
 
 //compares a users credentials to a given password
@@ -64,10 +66,12 @@ func (a jwtAuthMan) Authenticate(u Credentials, password string) (Authentication
 	return jwtAuth{token}, nil
 }
 
+//finds a cookie with the named authid and validates auth stored in cookie,
+// serves the passed function
 func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//check auth in requests
-		cookie, err := r.Cookie("pyt")
+		cookie, err := r.Cookie(a.authid)
 		if err != nil {
 			http.Error(w, "missing authentication", http.StatusUnauthorized)
 			return

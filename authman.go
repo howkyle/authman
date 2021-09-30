@@ -3,8 +3,8 @@ package uman
 import "net/http"
 
 type MiddlewareFilter interface {
-	// takes HandlerFunc h, returns a function which verifies user's access
-	// and calls the passed function hon success
+	// takes HandlerFunc h and returns a function which verifies user's access
+	//using the auth related to authid and calls the passed function hon success
 	Filter(h http.HandlerFunc) http.HandlerFunc
 }
 
