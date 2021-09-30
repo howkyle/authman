@@ -37,11 +37,11 @@ type UserRepository interface {
 //specifies user behaviour
 type User interface {
 	//returns the primary key id of the user
-	ID() interface{}
+	GetID() interface{}
 	//returns the username of the user
-	Username() string
+	GetUsername() string
 	//returns the email address of a user
-	Email() string
+	GetEmail() string
 	//returns the hashed password of a user
-	Password() string
+	GetPassword() string
 }
