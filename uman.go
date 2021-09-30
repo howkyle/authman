@@ -1,3 +1,4 @@
+//basic user management
 package uman
 
 type UserDeleter interface {
@@ -20,7 +21,7 @@ type Emailer interface {
 	Send(body string, recipient []string) error
 }
 
-//handles user
+//specifies behaviour of user
 type UserManager interface {
 	UserCreator
 	UserRetriever
@@ -28,6 +29,7 @@ type UserManager interface {
 	UserDeleter
 }
 
+//specifes behavior of user repository
 type UserRepository interface {
 	UserCreator
 	UserDeleter
