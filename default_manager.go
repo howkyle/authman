@@ -82,8 +82,6 @@ func NewRetriever(repo UserRetriever) UserRetriever {
 	return defaultRetriever{repo: repo}
 }
 
-// func newCreatorRetriever(repo Cre)
-
 //creates a new instance of the user manager with the provided user repository
 func NewUserManager(r UserRepository) UserManager {
 
