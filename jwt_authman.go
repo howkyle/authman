@@ -88,8 +88,8 @@ func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 }
 
 //creates a new instance of the jwt auth manager with a secret and issuer
-func NewJWTAuth(secret string, issuer string) jwtAuthMan {
-	return jwtAuthMan{secret: secret}
+func NewJWTAuthManager(secret string, authid, issuer string) AuthManager {
+	return jwtAuthMan{secret: secret, issuer: issuer, authid: authid}
 }
 
 //helpers
