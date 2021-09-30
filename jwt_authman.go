@@ -46,7 +46,9 @@ func (j jwtAuth) Auth() string {
 
 //represents jwt authentcation manager
 type jwtAuthMan struct {
+	//secret key
 	secret string
+	//issuer of authentications
 	issuer string
 	//cookie or header name where auth token is stored
 	authid string
@@ -131,10 +133,6 @@ func verifyToken(t string, secret string) (string, error) {
 		return "", fmt.Errorf("unable to parse token: %w", err)
 	}
 	c := token.Claims.(*jwt.StandardClaims)
-	// uid, err := strconv.ParseUint(c.Subject, 10, 64)
-	// if err != nil {
-	// 	return 0, fmt.Errorf("unable to parse sub: %w", err)
-	// }
 	return c.Subject, nil
 }
 
@@ -152,8 +150,4 @@ func bcryptHash(password string) ([]byte, error) {
 func NewUserPassCredentials(id string, password string) Credentials {
 	u := userPassCredentials{principal: id, password: password}
 	return u
-}
-
-func NewUPCredentials(id, password string) Credentials {
-	return userPassCredentials{principal: id, password: password}
 }
