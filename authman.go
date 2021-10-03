@@ -21,7 +21,9 @@ type AuthManager interface {
 
 type Authentication interface {
 	//retrieves string details about authentication jwt, session etc
-	Auth() string
+	AsString() string
+	//returns auth stored in a net/http cookie
+	AsCookie() http.Cookie
 }
 
 //interface to represent user credentials
