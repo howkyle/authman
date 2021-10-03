@@ -35,37 +35,43 @@ func (u userPassCredentials) Password() string {
 }
 
 //represent jwt authentication object
-type jwtAuth struct {
+type auth struct {
 	access_token string
+	//issuer of authentication
+	issuer string
+	//cookie or header name where auth token is stored
+	authid string
 }
 
 //returns the jwt
-func (j jwtAuth) Auth() string {
-	return j.access_token
+func (a auth) AsString() string {
+	return a.access_token
+}
+
+//returns http cookie with auth
+func (a auth) AsCookie() http.Cookie {
+	return http.Cookie{Name: a.authid, Value: a.access_token, Domain: a.issuer}
 }
 
 //represents jwt authentcation manager
 type jwtAuthMan struct {
 	//secret key
 	secret string
-	//issuer of authentications
-	issuer string
-	//cookie or header name where auth token is stored
-	authid string
+	auth   auth
 }
 
 //compares a users credentials to a given password
 func (a jwtAuthMan) Authenticate(u Credentials, password string) (Authentication, error) {
 	err := bcryptCompare([]byte(u.Password()), []byte(password))
 	if err != nil {
-		return jwtAuth{}, fmt.Errorf("credentials not equal: %w", err)
+		return nil, fmt.Errorf("credentials not equal: %w", err)
 	}
 
-	token, err := createToken(u.Identity(), a.secret, a.issuer)
+	a.auth.access_token, err = createToken(u.Identity(), a.secret, a.auth.issuer)
 	if err != nil {
 		return nil, fmt.Errorf("token creation failed: %w", err)
 	}
-	return jwtAuth{token}, nil
+	return a.auth, nil
 }
 
 //finds a cookie with the named authid and validates auth stored in cookie,
@@ -73,7 +79,7 @@ func (a jwtAuthMan) Authenticate(u Credentials, password string) (Authentication
 func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//check auth in requests
-		cookie, err := r.Cookie(a.authid)
+		cookie, err := r.Cookie(a.auth.authid)
 		if err != nil {
 			http.Error(w, "missing authentication", http.StatusUnauthorized)
 			return
@@ -91,7 +97,7 @@ func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 
 //creates a new instance of the jwt auth manager with a secret and issuer
 func NewJWTAuthManager(secret string, authid, issuer string) AuthManager {
-	return jwtAuthMan{secret: secret, issuer: issuer, authid: authid}
+	return jwtAuthMan{secret: secret, auth: auth{issuer: issuer, authid: authid}}
 }
 
 //helpers
