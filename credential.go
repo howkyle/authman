@@ -19,5 +19,5 @@ type Password interface {
 
 type Hasher interface {
 	//returns a string representation of the hash of the stored password
-	Hash() error
+	Hash() (string, error)
 }

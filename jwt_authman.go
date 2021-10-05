@@ -17,21 +17,20 @@ type userPassCredentials struct {
 }
 
 //returns the credentials principal, username, user id etc
-func (u *userPassCredentials) Identity() string {
+func (u userPassCredentials) Identity() string {
 	return u.principal
 }
 
 //returns a string representaion of the hash of the stored password
-func (u *userPassCredentials) Hash() error {
+func (u userPassCredentials) Hash() (string, error) {
 	hash, err := bcryptHash(u.password)
 	if err != nil {
-		return fmt.Errorf("unable to hash password: %w", err)
+		return "", fmt.Errorf("unable to hash password: %w", err)
 	}
-	u.password = string(hash)
-	return nil
+	return string(hash), nil
 }
 
-func (u *userPassCredentials) String() string {
+func (u userPassCredentials) String() string {
 	return u.password
 }
 
@@ -42,6 +41,8 @@ type auth struct {
 	issuer string
 	//cookie or header name where auth token is stored
 	authid string
+	//length of the session
+	session_len time.Duration
 }
 
 //returns the jwt
@@ -51,12 +52,11 @@ func (a auth) AsString() string {
 
 //returns http cookie with auth
 func (a auth) AsCookie() http.Cookie {
-	return http.Cookie{Name: a.authid, Value: a.access_token, Domain: a.issuer}
+	return http.Cookie{Name: a.authid, Value: a.access_token, Domain: a.issuer, Expires: time.Now().Add(a.session_len)}
 }
 
 //represents jwt authentcation manager
 type jwtAuthMan struct {
-	//secret key
 	secret string
 	auth   auth
 }
@@ -68,7 +68,7 @@ func (a jwtAuthMan) Authenticate(u Credential, password string) (Authentication,
 		return nil, fmt.Errorf("credentials not equal: %w", err)
 	}
 
-	a.auth.access_token, err = createToken(u.Identity(), a.secret, a.auth.issuer)
+	a.auth.access_token, err = createToken(u.Identity(), a.secret, a.auth.issuer, a.auth.session_len)
 	if err != nil {
 		return nil, fmt.Errorf("token creation failed: %w", err)
 	}
@@ -96,9 +96,9 @@ func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-//creates a new instance of the jwt auth manager with a secret and issuer
-func NewJWTAuthManager(secret string, authid, issuer string) AuthManager {
-	return jwtAuthMan{secret: secret, auth: auth{issuer: issuer, authid: authid}}
+//creates a new instance of the jwt auth manager with a secret and issuer and session duration
+func NewJWTAuthManager(secret string, authid, issuer string, session_len time.Duration) AuthManager {
+	return jwtAuthMan{secret: secret, auth: auth{issuer: issuer, authid: authid, session_len: session_len}}
 }
 
 //helpers
@@ -113,10 +113,10 @@ func bcryptCompare(a, b []byte) error {
 }
 
 //creates jwt using subject and secret, returns signed string
-func createToken(subject string, secret string, issuer string) (string, error) {
+func createToken(subject string, secret string, issuer string, session_len time.Duration) (string, error) {
 	claims := jwt.StandardClaims{
 		Subject:   subject,
-		ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		ExpiresAt: time.Now().Add(session_len).Unix(),
 		Issuer:    issuer,
 		IssuedAt:  time.Now().Unix(),
 	}
@@ -156,5 +156,5 @@ func bcryptHash(password string) ([]byte, error) {
 //takes identifier and password and returns user pass credential struct
 func NewUserPassCredentials(id string, password string) Credential {
 	u := userPassCredentials{principal: id, password: password}
-	return &u
+	return u
 }
