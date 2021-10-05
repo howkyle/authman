@@ -1,4 +1,4 @@
-package uman
+package authman
 
 import "net/http"
 
@@ -10,7 +10,7 @@ type MiddlewareFilter interface {
 
 type Authenticator interface {
 	//accepts user details and given password, compares equality and returns auth type
-	Authenticate(u Credentials, password string) (Authentication, error)
+	Authenticate(u Credential, password string) (Authentication, error)
 }
 type AuthManager interface {
 	// //accepts username and password and transforms to custom user details type
@@ -24,25 +24,4 @@ type Authentication interface {
 	AsString() string
 	//returns auth stored in a net/http cookie
 	AsCookie() http.Cookie
-}
-
-//interface to represent user credentials
-type Credentials interface {
-	Password
-	Identifier
-}
-
-type Identifier interface {
-	//retrieves the principal associated with the credentials eg. username, id etc
-	Identity() string
-}
-
-type Hasher interface {
-	//returns a string representation of the hash of the stored password
-	Hash() (string, error)
-}
-type Password interface {
-	//returns the given password
-	Password() string
-	Hasher
 }
