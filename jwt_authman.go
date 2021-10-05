@@ -1,4 +1,4 @@
-package uman
+package authman
 
 import (
 	"context"
@@ -17,20 +17,21 @@ type userPassCredentials struct {
 }
 
 //returns the credentials principal, username, user id etc
-func (u userPassCredentials) Identity() string {
+func (u *userPassCredentials) Identity() string {
 	return u.principal
 }
 
 //returns a string representaion of the hash of the stored password
-func (u userPassCredentials) Hash() (string, error) {
+func (u *userPassCredentials) Hash() error {
 	hash, err := bcryptHash(u.password)
 	if err != nil {
-		return "", fmt.Errorf("unable to hash password: %w", err)
+		return fmt.Errorf("unable to hash password: %w", err)
 	}
-	return string(hash), nil
+	u.password = string(hash)
+	return nil
 }
 
-func (u userPassCredentials) Password() string {
+func (u *userPassCredentials) String() string {
 	return u.password
 }
 
@@ -61,8 +62,8 @@ type jwtAuthMan struct {
 }
 
 //compares a users credentials to a given password
-func (a jwtAuthMan) Authenticate(u Credentials, password string) (Authentication, error) {
-	err := bcryptCompare([]byte(u.Password()), []byte(password))
+func (a jwtAuthMan) Authenticate(u Credential, password string) (Authentication, error) {
+	err := bcryptCompare([]byte(u.String()), []byte(password))
 	if err != nil {
 		return nil, fmt.Errorf("credentials not equal: %w", err)
 	}
@@ -153,7 +154,7 @@ func bcryptHash(password string) ([]byte, error) {
 }
 
 //takes identifier and password and returns user pass credential struct
-func NewUserPassCredentials(id string, password string) Credentials {
+func NewUserPassCredentials(id string, password string) Credential {
 	u := userPassCredentials{principal: id, password: password}
-	return u
+	return &u
 }
