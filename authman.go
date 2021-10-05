@@ -13,8 +13,6 @@ type Authenticator interface {
 	Authenticate(u Credential, password string) (Authentication, error)
 }
 type AuthManager interface {
-	// //accepts username and password and transforms to custom user details type
-	// NewCredentials(sub interface{}, password string) Credentials
 	Authenticator
 	MiddlewareFilter
 }

@@ -2,7 +2,7 @@ package authman
 
 //interface to represent user credentials
 type Credential interface {
-	Password
+	Password //todo maybe rename to something more appropriate/general
 	Identifier
 }
 
