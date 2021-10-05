@@ -1,4 +1,4 @@
-module github.com/howkyle/uman
+module github.com/howkyle/authman
 
 go 1.16
 
