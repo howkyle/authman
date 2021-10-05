@@ -2,14 +2,22 @@ package authman
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var FailedPasswordHash = errors.New("failed to hash password")
+var FailedTokenCreation = errors.New("failed to create token")
+var FailedCredentialMatch = errors.New("credential comparison failed")
+var FailedPasswordCompare = errors.New("password comparison failed")
+var FailedTokenSigning = errors.New("failed to sign token")
+var FailedTokenParsing = errors.New("failed to parse token")
+var MissingAuthentication = errors.New("authentication not found")
 
 type userPassCredentials struct {
 	principal string
@@ -25,7 +33,7 @@ func (u userPassCredentials) Identity() string {
 func (u userPassCredentials) Hash() (string, error) {
 	hash, err := bcryptHash(u.password)
 	if err != nil {
-		return "", fmt.Errorf("unable to hash password: %w", err)
+		return "", err
 	}
 	return string(hash), nil
 }
@@ -65,12 +73,12 @@ type jwtAuthMan struct {
 func (a jwtAuthMan) Authenticate(u Credential, password string) (Authentication, error) {
 	err := bcryptCompare([]byte(u.String()), []byte(password))
 	if err != nil {
-		return nil, fmt.Errorf("credentials not equal: %w", err)
+		return nil, fmt.Errorf("%w: %v", FailedCredentialMatch, err)
 	}
 
 	a.auth.access_token, err = createToken(u.Identity(), a.secret, a.auth.issuer, a.auth.session_len)
 	if err != nil {
-		return nil, fmt.Errorf("token creation failed: %w", err)
+		return nil, fmt.Errorf("%w:%v", FailedTokenCreation, err)
 	}
 	return a.auth, nil
 }
@@ -82,7 +90,7 @@ func (a jwtAuthMan) Filter(h http.HandlerFunc) http.HandlerFunc {
 		//check auth in requests
 		cookie, err := r.Cookie(a.auth.authid)
 		if err != nil {
-			http.Error(w, "missing authentication", http.StatusUnauthorized)
+			http.Error(w, MissingAuthentication.Error(), http.StatusUnauthorized)
 			return
 		}
 		sub, err := verifyToken(cookie.Value, a.secret)
@@ -107,7 +115,7 @@ func NewJWTAuthManager(secret string, authid, issuer string, session_len time.Du
 func bcryptCompare(a, b []byte) error {
 	err := bcrypt.CompareHashAndPassword(a, b)
 	if err != nil {
-		return fmt.Errorf("password comparision failed: %v", err)
+		return fmt.Errorf("%w: %v", FailedPasswordCompare, err)
 	}
 	return nil
 }
@@ -124,20 +132,20 @@ func createToken(subject string, secret string, issuer string, session_len time.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ts, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return "", fmt.Errorf("unable to sign token: %v", err)
+		return "", fmt.Errorf("%w: %v", FailedTokenSigning, err)
 	}
 	return ts, nil
 }
 
 //takes a token string and the server secret and parses and validates token and returns
-//the subject i.e username
+//the subject i.e username, user id
 func verifyToken(t string, secret string) (string, error) {
 	//todo add more validations and checks
 	token, err := jwt.ParseWithClaims(t, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("unable to parse token: %w", err)
+		return "", fmt.Errorf("%w: %v", FailedTokenParsing, err)
 	}
 	c := token.Claims.(*jwt.StandardClaims)
 	return c.Subject, nil
@@ -147,8 +155,7 @@ func verifyToken(t string, secret string) (string, error) {
 func bcryptHash(password string) ([]byte, error) {
 	hp, err := bcrypt.GenerateFromPassword([]byte(password), 15)
 	if err != nil {
-		log.Printf("hash failed: %v", err)
-		return nil, fmt.Errorf("unable to hash password: %v", err)
+		return nil, fmt.Errorf("%w: %v", FailedPasswordHash, err)
 	}
 	return hp, nil
 }
