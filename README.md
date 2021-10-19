@@ -4,59 +4,59 @@ basic auth management for GO
 
 # Usage
 
-1. importing
-   import "github.com/howkyle/authman"
+# importing
 
-2. creating an instance
+import "github.com/howkyle/authman"
 
-   //secret - secret key used to sign token
-   //authid - cookie name or header name where token is stored
-   //issuer - issuer of auth eg localhost
-   //session_exp - duration of the session (time.Duration)
+# creating an instance
 
-   a := authman.NewJWTAuthManager(secret, authid, issuer, session_exp)
+secret - secret key used to sign token, authid - cookie name or header name where token is stored, issuer - issuer of auth eg localhost, session_exp - duration of the session (time.Duration)
 
-3. creating new credentials
+a := authman.NewJWTAuthManager(secret, authid, issuer, session_exp)
 
-   //principal - user id or username as a string
-   //password - password input from user
+# creating new credentials
 
-   cred:=authman.NewUserPassCredentials(principal, password)
+principal - user id or username as a string, password - password input from user
 
-4. getting hashed password from new credentials
+cred:=authman.NewUserPassCredentials(principal, password)
 
-   pass, err:= cred.Hash()
+# getting hashed password from new credentials
 
-5. authenticating a user
+pass, err:= cred.Hash()
 
-   //using an instance of authmanager
+# authenticating a user
 
-   a := authman.NewJWTAuthManager(secret, authid, issuer, session_exp)
+1.  using an instance of authmanager
 
-   //retrieve the user and create new credentials
+a := authman.NewJWTAuthManager(secret, authid, issuer, session_exp)
 
-   cred:=authman.NewUserPassCredentials(principal, password)
+2.  retrieve the user and create new credentials
 
-   //take the credentials created from the retrieved user as authman.Credentials and takes takes the password to be validated.
-   //returns an authman.Authentication instance or an error if authentication fails
+cred:=authman.NewUserPassCredentials(principal, password)
 
-   auth, err:= a.Authenticate(cred authman.Credentials, password string)
+3. take the credentials created from the retrieved user as authman.Credentials and takes takes the password to be validated.
+   Returns an authman.Authentication instance or an error if authentication fails
 
-   //get auth as string type
-   s:=auth.AsString()
+auth, err:= a.Authenticate(cred authman.Credentials, password string)
 
-   //get created auth as a net/http cookie
-   c:=auth.AsCookie()
+4. get auth as string type
 
-6. Filter Middleware
-   //using an instance of authmanager
+s:=auth.AsString()
+or
+get created auth as a net/http cookie
 
-   a := authman.NewJWTAuthManager(secret, authid, issuer, session_exp)
+c:=auth.AsCookie()
 
-   //wrap handler func with auth filter
+# filter middleware
 
-   http.HandleFunc("/", a.Filter(func(w http.ResponseWriter, r \*http.Request){}))
+1. using an instance of authmanager
 
-   //filter checks the http request for the cookie storing the access token, verifies the token, extracts the principal, passes it to the request context with the key 'sub' and serves the wrapped HandlerFunc
+a := authman.NewJWTAuthManager(secret, authid, issuer, session_exp)
 
-   //if the token is invalid or the cookie isnt present, Filter returns a 401
+2. wrap handler func with auth filter
+
+http.HandleFunc("/", a.Filter(func(w http.ResponseWriter, r \*http.Request){}))
+
+filter checks the http request for the cookie storing the access token, verifies the token, extracts the principal, passes it to the request context with the key 'sub' and serves the wrapped HandlerFunc
+
+If the token is invalid or the cookie isnt present, Filter returns a 401
